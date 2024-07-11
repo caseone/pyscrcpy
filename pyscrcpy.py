@@ -51,6 +51,8 @@ class AdbManager:
         
         self.shutdown = False  # 添加一个标志来跟踪应用程序是否正在关闭+
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        # self.status_thread = threading.Thread(target=self.update_device_status)
+        # self.status_thread.start()
 
         # 表格添加到滚动条中
         vsb = ttk.Scrollbar(root, orient="vertical", command=self.tree.yview)
@@ -75,11 +77,16 @@ class AdbManager:
         self.right_click_menu.add_command(label="Disconnect", command=lambda: self.on_right_menu_button_click(f"Disconnect"))
         self.right_click_menu.add_command(label="Scrcpy", command=lambda: self.on_right_menu_button_click(f"Scrcpy"))
 
+        # self.right_click_menu.add_command(label="Move Up", command=self.move_up)
+        # self.right_click_menu.add_command(label="Move Down", command=self.move_down)
+
         self.right_click_menu.add_command(label="Delete", command=lambda: self.on_right_menu_button_click(f"Delete"))
 
 
     def on_close(self):
-        self.shutdown = True 
+        self.shutdown = True  # 设置标志，告诉线程是时候退出了
+        # 如果有多个线程，这里可以使用join()等待它们结束
+        # self.status_thread.join()
         self.root.destroy()
 
     def show_adb_devices(self):
@@ -129,6 +136,11 @@ class AdbManager:
                 device["Order"]=999
                 self.config["devices"].append(device)   
         self.update_tree()
+
+    def update_device_status(self):
+        while not self.shutdown:
+            self.refresh_devices()
+            time.sleep(10)  # 10秒更新一次
 
     def add_device(self):
         # 创建一个顶层窗口作为输入对话框
