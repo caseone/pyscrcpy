@@ -239,16 +239,17 @@ class AdbManager:
 
     def async_run_command(self, cmd):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout, stderr = process.communicate()
-        return_code = process.returncode
-        if return_code == 0:
-            # print(f"Command executed successfully: {cmd}")
-            # print("Output:\n", stdout)
-            return stdout
-        else:
-            # print(f"Command failed with return code {return_code}: {cmd}")
-            # print("Error:\n", stderr)
-            return stderr
+        return ""
+        # stdout, stderr = process.communicate()
+        # return_code = process.returncode
+        # if return_code == 0:
+        #     # print(f"Command executed successfully: {cmd}")
+        #     # print("Output:\n", stdout)
+        #     return stdout
+        # else:
+        #     # print(f"Command failed with return code {return_code}: {cmd}")
+        #     # print("Error:\n", stderr)
+        #     return stderr
 
     def on_button_click(self, device_id, operation):
         if operation == "Connect":
