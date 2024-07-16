@@ -51,6 +51,8 @@ class AdbManager:
         
         self.shutdown = False  # 添加一个标志来跟踪应用程序是否正在关闭+
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        # self.status_thread = threading.Thread(target=self.update_device_status)
+        # self.status_thread.start()
 
         # 表格添加到滚动条中
         vsb = ttk.Scrollbar(root, orient="vertical", command=self.tree.yview)
@@ -75,11 +77,16 @@ class AdbManager:
         self.right_click_menu.add_command(label="Disconnect", command=lambda: self.on_right_menu_button_click(f"Disconnect"))
         self.right_click_menu.add_command(label="Scrcpy", command=lambda: self.on_right_menu_button_click(f"Scrcpy"))
 
+        # self.right_click_menu.add_command(label="Move Up", command=self.move_up)
+        # self.right_click_menu.add_command(label="Move Down", command=self.move_down)
+
         self.right_click_menu.add_command(label="Delete", command=lambda: self.on_right_menu_button_click(f"Delete"))
 
 
     def on_close(self):
-        self.shutdown = True 
+        self.shutdown = True  # 设置标志，告诉线程是时候退出了
+        # 如果有多个线程，这里可以使用join()等待它们结束
+        # self.status_thread.join()
         self.root.destroy()
 
     def show_adb_devices(self):
@@ -118,6 +125,11 @@ class AdbManager:
     def refresh_devices(self):
         adb_devices = self.get_adb_devices()
         # print('adb_devices:',adb_devices)
+
+        # clear 
+        for d in self.config["devices"]:
+            d['Status'] = ''
+
         for device in adb_devices:
             got = False
             for d in self.config["devices"]:
@@ -129,6 +141,11 @@ class AdbManager:
                 device["Order"]=999
                 self.config["devices"].append(device)   
         self.update_tree()
+
+    def update_device_status(self):
+        while not self.shutdown:
+            self.refresh_devices()
+            time.sleep(10)  # 10秒更新一次
 
     def add_device(self):
         # 创建一个顶层窗口作为输入对话框
@@ -211,21 +228,35 @@ class AdbManager:
         if next_item:
             self.tree.move(selected, "", next_item)
 
-    def run_adb_command(self, command):
+    def run_command(self, command):
         try:
             result = subprocess.run(command, check=True, shell=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
             return f"Error executing {command}: {e}"
+        
+
+    def async_run_command(self, cmd):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+        return_code = process.returncode
+        if return_code == 0:
+            # print(f"Command executed successfully: {cmd}")
+            # print("Output:\n", stdout)
+            return stdout
+        else:
+            # print(f"Command failed with return code {return_code}: {cmd}")
+            # print("Error:\n", stderr)
+            return stderr
 
     def on_button_click(self, device_id, operation):
         if operation == "Connect":
-            return self.run_adb_command(f"adb connect {device_id}")
+            return self.run_command(f"adb connect {device_id}")
         elif operation == "Disconnect":
-            return self.run_adb_command(f"adb disconnect {device_id}")
+            return self.run_command(f"adb disconnect {device_id}")
         elif operation == "Scrcpy":
-            return self.run_adb_command(f"scrcpy -s {device_id}")
+            return self.async_run_command(f"scrcpy -s {device_id}")
         elif operation == "Delete":
             self.tree.delete(self.tree.selection()[0])
             self.config["devices"] = [device for device in self.config["devices"] if device['DeviceId'] != device_id]
