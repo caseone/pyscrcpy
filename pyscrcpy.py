@@ -125,6 +125,11 @@ class AdbManager:
     def refresh_devices(self):
         adb_devices = self.get_adb_devices()
         # print('adb_devices:',adb_devices)
+
+        # clear 
+        for d in self.config["devices"]:
+            d['Status'] = ''
+
         for device in adb_devices:
             got = False
             for d in self.config["devices"]:
@@ -223,21 +228,35 @@ class AdbManager:
         if next_item:
             self.tree.move(selected, "", next_item)
 
-    def run_adb_command(self, command):
+    def run_command(self, command):
         try:
             result = subprocess.run(command, check=True, shell=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
             return f"Error executing {command}: {e}"
+        
+
+    def async_run_command(self, cmd):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+        return_code = process.returncode
+        if return_code == 0:
+            # print(f"Command executed successfully: {cmd}")
+            # print("Output:\n", stdout)
+            return stdout
+        else:
+            # print(f"Command failed with return code {return_code}: {cmd}")
+            # print("Error:\n", stderr)
+            return stderr
 
     def on_button_click(self, device_id, operation):
         if operation == "Connect":
-            return self.run_adb_command(f"adb connect {device_id}")
+            return self.run_command(f"adb connect {device_id}")
         elif operation == "Disconnect":
-            return self.run_adb_command(f"adb disconnect {device_id}")
+            return self.run_command(f"adb disconnect {device_id}")
         elif operation == "Scrcpy":
-            return self.run_adb_command(f"scrcpy -s {device_id}")
+            return self.async_run_command(f"scrcpy -s {device_id}")
         elif operation == "Delete":
             self.tree.delete(self.tree.selection()[0])
             self.config["devices"] = [device for device in self.config["devices"] if device['DeviceId'] != device_id]
