@@ -263,6 +263,7 @@ class AdbManager:
         #     # print("Error:\n", stderr)
         #     return stderr
 
+
     def on_button_click(self, device_id, operation):
         if operation == "Connect":
             return self.run_command(f"adb connect {device_id}")
