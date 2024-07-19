@@ -25,7 +25,7 @@
             "Order": 0
         }
     ],
-    "scrcpyArgs": ""
+    "scrcpyOptions": ""
    }
    ```
 
