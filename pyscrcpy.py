@@ -26,6 +26,7 @@ class AdbManager:
         # Create Tools Menu
         toolsmenu = Menu(self.menubar, tearoff=0)
         toolsmenu.add_command(label="adb devices", command=self.show_adb_devices)
+        toolsmenu.add_command(label="show config", command=self.show_config)
         self.menubar.add_cascade(label="Tools", menu=toolsmenu)
 
         # Create Help Menu
@@ -43,7 +44,7 @@ class AdbManager:
 
         # 配置文件路径
         self.config_file = "pyscrcpy.json"
-        self.config = {"devices":[]}
+        self.config = {"devices":[],"scrcpyOptions":""}
 
         # 加载数据
         self.load_data()
@@ -97,6 +98,17 @@ class AdbManager:
             status = d['Status']
             str += (deviceId + " " + status + "\n")
         messagebox.showinfo("adb devices", str)
+    
+    def show_config(self):
+        try:
+            current_dir = os.getcwd()
+            full_path = os.path.join(current_dir, self.config_file)
+            # 使用系统默认程序打开文件
+            subprocess.run(['start', full_path], check=True, shell=True)
+        except Exception as e:
+            print(f"Failed to open file: {full_path} {e}")
+            messagebox.showwarning("open "+full_path, e)
+
 
 
     def show_help(self):
@@ -257,7 +269,10 @@ class AdbManager:
         elif operation == "Disconnect":
             return self.run_command(f"adb disconnect {device_id}")
         elif operation == "Scrcpy":
-            return self.async_run_command(f"scrcpy -s {device_id}")
+            if 'scrcpyOptions' in self.config:
+                return self.async_run_command(f"scrcpy -s {device_id} {self.config['scrcpyOptions']}")
+            else:
+                return self.async_run_command(f"scrcpy -s {device_id} ")
         elif operation == "Delete":
             self.tree.delete(self.tree.selection()[0])
             self.config["devices"] = [device for device in self.config["devices"] if device['DeviceId'] != device_id]
