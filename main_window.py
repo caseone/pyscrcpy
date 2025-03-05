@@ -279,17 +279,39 @@ class MainWindow(QMainWindow):
         copy_action = QAction('复制设备ID', menu)
         connect_action = QAction('连接设备', menu)
         scrcpy_action = QAction('启动scrcpy', menu)  # 新增启动scrcpy选项
+        modify_action = QAction('修改别名', menu)  # 新增修改别名选项
         
         copy_action.triggered.connect(self.copy_device_id)
         connect_action.triggered.connect(self.connect_device)
         scrcpy_action.triggered.connect(self.launch_scrcpy)  # 连接到启动scrcpy方法
+        modify_action.triggered.connect(self.modify_alias)  # 连接新方法
         
         menu.addAction(copy_action)
         menu.addAction(connect_action)
         menu.addAction(scrcpy_action)  # 添加到菜单
+        menu.addAction(modify_action)  # 添加到菜单
         
         menu.exec_(self.list_widget.mapToGlobal(pos))
     
+    def modify_alias(self):
+        selected = self.list_widget.currentRow()
+        if selected >= 0:
+            device_id = self.device_manager.devices[selected]['id']
+            current_alias = self.device_manager.devices[selected]['alias']
+            
+            dialog = InputDialog(self)
+            dialog.setWindowTitle('修改设备别名')
+            dialog.id_edit.setText(device_id)
+            dialog.id_edit.setEnabled(False)  # 禁用ID编辑
+            dialog.alias_edit.setText(current_alias)
+            
+            if dialog.exec_() == QDialog.Accepted:
+                new_alias = dialog.alias_edit.text().strip()
+                self.device_manager.update_alias(device_id, new_alias)
+                self.update_device_list()
+        else:
+            QMessageBox.warning(self, '警告', '请先选择要修改的设备')
+
     def copy_device_id(self):
         selected = self.list_widget.currentRow()
         if selected >= 0:
