@@ -1,0 +1,11 @@
+{
+  "devices": [
+    {
+      "id": "127.0.0.1:5555",
+      "alias": "test",
+      "status": "未连接",
+      "last_connect": ""
+    }
+  ],
+  "global_scrcpy_params": ""
+}
