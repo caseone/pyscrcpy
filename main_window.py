@@ -78,7 +78,6 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
         self.setCentralWidget(container)
         self.update_device_list()
-    
     def update_device_list(self):
         # 获取当前adb连接设备
         try:
@@ -92,6 +91,16 @@ class MainWindow(QMainWindow):
             new_status = '已连接' if device['id'] in connected_devices else '未连接'
             if device['status'] != new_status:
                 self.device_manager.update_status(device['id'], new_status)
+        
+        # 新增代码：自动添加网络设备到配置文件
+        for dev_id in connected_devices:
+            # 检查是否已存在
+            if not any(d['id'] == dev_id for d in self.device_manager.devices):
+                self.device_manager.add_device({
+                    'id': dev_id,
+                    'alias': dev_id,
+                    'status': '已连接'
+                })
         
         # 刷新界面显示
         self.list_widget.clear()
