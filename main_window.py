@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QMainWindow, QListWidget, QPushButton, QVBoxLayout, QInputDialog, QMessageBox, QWidget, QMenu, QAction
 from device_manager import DeviceManager
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QProcess, QTimer
 import subprocess
 import os
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QLineEdit, QDialogButtonBox
@@ -226,22 +226,45 @@ class MainWindow(QMainWindow):
     # 修改scrcpy启动命令
     def launch_scrcpy(self):
         selected = self.list_widget.currentRow()
+        if selected < 0:
+            QMessageBox.warning(self, '警告', '请先选择要启动的设备')
+            return
+            
         device_id = self.device_manager.devices[selected]['id']
         cmd = f'scrcpy -s {device_id} {self.device_manager.global_scrcpy_params}'
         
+        # 使用QProcess异步执行
+        self.process = QProcess(self)
+        self.process.started.connect(lambda: self.statusBar().showMessage("正在启动scrcpy..."))
+        self.process.finished.connect(lambda: self.statusBar().showMessage("scrcpy已退出"))
+        self.process.errorOccurred.connect(self.handle_scrcpy_error)
+        
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding='utf-8', errors='ignore', timeout=30)
-            output = f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+            # 分离命令行参数
+            args = cmd.split()
+            program = args[0]
+            args = args[1:]
             
-            if result.returncode != 0 or 'error' in result.stderr.lower():
-                QMessageBox.warning(self, '执行错误', f'scrcpy启动失败:\n{output}')
-            # else:
-            #     QMessageBox.information(self, '执行成功', 'scrcpy已正常启动')
-        except subprocess.TimeoutExpired:
-            QMessageBox.warning(self, '超时错误', 'scrcpy启动超时')
+            self.process.start(program, args)
+            
+            # 添加超时检测（30秒）
+            QTimer.singleShot(30000, lambda: (
+                self.process.kill() if self.process.state() == QProcess.Running else None,
+                QMessageBox.warning(self, '超时错误', 'scrcpy启动超时')
+            ))
         except Exception as e:
-            QMessageBox.critical(self, '意外错误', f'发生未知错误: {str(e)}')
+            QMessageBox.critical(self, '启动错误', f'无法启动进程: {str(e)}')
     
+    def handle_scrcpy_error(self, error):
+        error_msg = {
+            QProcess.FailedToStart: "进程无法启动",
+            QProcess.Crashed: "进程意外崩溃",
+            QProcess.Timedout: "进程超时",
+            QProcess.WriteError: "写入错误",
+            QProcess.ReadError: "读取错误",
+            QProcess.UnknownError: "未知错误"
+        }.get(error, "未知错误")
+        QMessageBox.warning(self, '进程错误', f'scrcpy运行异常: {error_msg}')
     def show_context_menu(self, pos):
         menu = QMenu()
         copy_action = QAction('复制设备ID', menu)
