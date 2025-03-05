@@ -15,22 +15,30 @@ class DeviceManager:
             self.devices.append({
                 'id': device['id'],
                 'alias': device.get('alias', ''),
-
+    
                 'status': device.get('status', '未连接'),
                 'last_connect': ''
             })
             self.save_devices()
-
+    
     def remove_device(self, device_id):
         self.devices = [d for d in self.devices if d['id'] != device_id]
         self.save_devices()
-
+    
     def update_status(self, device_id, status):
         for device in self.devices:
             if device['id'] == device_id:
                 device['status'] = status
         self.save_devices()
-
+    
+    def update_alias(self, device_id, new_alias):
+        for device in self.devices:
+            if device['id'] == device_id:
+                device['alias'] = new_alias
+                self.save_devices()
+                return True
+        return False
+    
     def load_devices(self):
         try:
             if os.path.exists(self.config_path):
@@ -49,7 +57,7 @@ class DeviceManager:
             QMessageBox.critical(None, '配置错误', '配置文件格式错误')
         except Exception as e:
             QMessageBox.critical(None, '配置错误', f'加载配置文件失败: {str(e)}')
-
+    
     def save_devices(self):
         try:
             config_data = {
