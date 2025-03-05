@@ -49,7 +49,7 @@ python main.py
 pip install pyinstaller
 
 # 执行打包
-python -m PyInstaller --name pyscrcpy  --onefile  --noconsole --icon=pyscrcpy.jpg main.py
+python -m PyInstaller --name pyscrcpy  --onefile  --noconsole --icon=pyscrcpy.jpg --noupx --clean main.py
 ```
 
 ## 注意事项
