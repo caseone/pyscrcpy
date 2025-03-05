@@ -235,8 +235,8 @@ class MainWindow(QMainWindow):
             
             if result.returncode != 0 or 'error' in result.stderr.lower():
                 QMessageBox.warning(self, '执行错误', f'scrcpy启动失败:\n{output}')
-            else:
-                QMessageBox.information(self, '执行成功', 'scrcpy已正常启动')
+            # else:
+            #     QMessageBox.information(self, '执行成功', 'scrcpy已正常启动')
         except subprocess.TimeoutExpired:
             QMessageBox.warning(self, '超时错误', 'scrcpy启动超时')
         except Exception as e:
