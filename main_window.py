@@ -104,8 +104,14 @@ class MainWindow(QMainWindow):
         
         # 刷新界面显示
         self.list_widget.clear()
+        max_id_len = max(len(d['id']) for d in self.device_manager.devices) if self.device_manager.devices else 0
+        max_alias_len = max(len(d['alias']) for d in self.device_manager.devices) if self.device_manager.devices else 0
         for device in self.device_manager.devices:
-            self.list_widget.addItem(f"{device['id']} - {device['alias']} ({device['status']})")
+            # iterm = f"{device['id']} - {device['alias']} ({device['status']})"
+            # item = "{:<20} {:<20} {:<20}".format(device['id'], "-"+device['alias'], device['status'])
+            item = f"{device['id'].ljust(max(max_id_len, 20))} - {device['alias'].ljust(max(max_alias_len, 15))} {device['status']}"
+            # print(item)
+            self.list_widget.addItem(item)
     
     @pyqtSlot()
     def add_device(self):
@@ -148,10 +154,6 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, '连接错误', f'连接过程中发生异常: {str(e)}')
         else:
             QMessageBox.warning(self, '警告', '请先选择要连接的设备')
-
-    def delete_device(self):
-        # 删除设备逻辑
-        print("删除设备")
 
     def start_scrcpy(self):
         # 启动scrcpy逻辑
@@ -278,21 +280,53 @@ class MainWindow(QMainWindow):
         menu = QMenu()
         copy_action = QAction('复制设备ID', menu)
         connect_action = QAction('连接设备', menu)
-        scrcpy_action = QAction('启动scrcpy', menu)  # 新增启动scrcpy选项
-        modify_action = QAction('修改别名', menu)  # 新增修改别名选项
-        
+        scrcpy_action = QAction('启动scrcpy', menu)
+        modify_action = QAction('修改别名', menu)
+        adb_shell_action = QAction('ADB Shell', menu)
+
         copy_action.triggered.connect(self.copy_device_id)
         connect_action.triggered.connect(self.connect_device)
-        scrcpy_action.triggered.connect(self.launch_scrcpy)  # 连接到启动scrcpy方法
-        modify_action.triggered.connect(self.modify_alias)  # 连接新方法
-        
+        scrcpy_action.triggered.connect(self.launch_scrcpy)
+        modify_action.triggered.connect(self.modify_alias)
+        adb_shell_action.triggered.connect(self.open_adb_shell)  # 连接信号
+
         menu.addAction(copy_action)
         menu.addAction(connect_action)
-        menu.addAction(scrcpy_action)  # 添加到菜单
-        menu.addAction(modify_action)  # 添加到菜单
+        menu.addAction(scrcpy_action)
+        menu.addAction(adb_shell_action)
+        menu.addAction(modify_action)
+
         
         menu.exec_(self.list_widget.mapToGlobal(pos))
-    
+
+    def open_adb_shell(self):  # 新增处理方法
+        selected = self.list_widget.currentRow()
+        if selected >= 0:
+            device_id = self.device_manager.devices[selected]['id']
+            try:
+                # 使用Windows start命令创建独立控制台窗口
+                subprocess.Popen(
+                    f'start cmd /k adb -s {device_id} shell',
+                    shell=True,
+                    # creationflags=subprocess.CREATE_NEW_CONSOLE,
+                    stdin=subprocess.DEVNULL,    # 防止输入流阻塞
+                    stdout=subprocess.DEVNULL,   # 忽略标准输出
+                    stderr=subprocess.DEVNULL    # 忽略错误输出
+                )
+            except Exception as e:
+                error_msg = f'错误详情：{str(e)}'
+                QMessageBox.critical(
+                    self, '错误',
+                    f'ADB Shell启动失败！\n{error_msg}\n'
+                    '常见问题排查：\n'
+                    '1. 确认adb.exe在PATH环境变量中\n'
+                    '2. 设备需要先成功连接\n'
+                    '3. 允许程序通过防火墙\n'
+                    '4. 尝试管理员身份运行程序'
+                )
+        else:
+            QMessageBox.warning(self, '警告', '请先选择设备')
+
     def modify_alias(self):
         selected = self.list_widget.currentRow()
         if selected >= 0:
