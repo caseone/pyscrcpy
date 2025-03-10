@@ -2,25 +2,7 @@
   "devices": [
     {
       "id": "127.0.0.1:5555",
-      "alias": "test111",
-      "status": "未连接",
-      "last_connect": ""
-    },
-    {
-      "id": "c39d1d83",
-      "alias": "c39d1d83",
-      "status": "未连接",
-      "last_connect": ""
-    },
-    {
-      "id": "11",
-      "alias": "22",
-      "status": "未连接",
-      "last_connect": ""
-    },
-    {
-      "id": "12345678901234567890",
-      "alias": "",
+      "alias": "test",
       "status": "未连接",
       "last_connect": ""
     }
