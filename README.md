@@ -12,6 +12,8 @@
 - 📦 支持打包为独立可执行文件
 - 🖱️ 右键菜单快捷操作
 - 📋 设备ID快捷复制
+- 🛠️ 修改设备别名  
+- 🖥️ ADB Shell操作
 
 ## 环境要求
 - Python 3.8+ 
@@ -42,20 +44,16 @@ python main.py
    - 双击设备项或点击"连接设备"
 3. 启动scrcpy：
    - 选择设备后点击"启动Scrcpy"
-
-## 打包指南
-```bash
-# 安装pyinstaller
-pip install pyinstaller
-
-# 执行打包
-python -m PyInstaller --name pyscrcpy  --onefile  --noconsole --icon=pyscrcpy.jpg --noupx --clean main.py
-```
+4. 修改设备别名：
+   - 右键设备项选择"修改别名"
+5. ADB Shell操作：
+   - 右键设备项选择"ADB Shell"
 
 ## 注意事项
 - 首次使用请确保adb环境配置正确
 - 设备连接需要开启USB调试模式
 - 打包版本需在Windows环境下执行
+- 确保adb.exe在PATH环境变量中  // 新增
 
 ## 界面预览
 ![程序界面](screenshot.jpg)
