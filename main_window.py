@@ -259,10 +259,10 @@ class MainWindow(QMainWindow):
             self.process.start(program, args)
             
             # 添加超时检测（30秒）
-            QTimer.singleShot(30000, lambda: (
-                self.process.kill() if self.process.state() == QProcess.Running else None,
-                QMessageBox.warning(self, '超时错误', 'scrcpy启动超时')
-            ))
+            # QTimer.singleShot(30000, lambda: (
+            #     self.process.kill() if self.process.state() == QProcess.Running else None,
+            #     QMessageBox.warning(self, '超时错误', 'scrcpy启动超时')
+            # ))
         except Exception as e:
             QMessageBox.critical(self, '启动错误', f'无法启动进程: {str(e)}')
     
