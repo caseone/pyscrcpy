@@ -58,4 +58,4 @@ python -m PyInstaller --name pyscrcpy  --onefile  --noconsole --icon=pyscrcpy.jp
 - 打包版本需在Windows环境下执行
 
 ## 界面预览
-![程序界面](pyscrcpy.jpg)
+![程序界面](screenshot.jpg)
