@@ -49,7 +49,8 @@ class DeviceManager:
                         self.devices = config_data
                         self.global_scrcpy_params = ''
                     else:
-                        self.devices = config_data.get('devices', [])
+                        devices = config_data.get('devices', [])
+                        self.devices = sorted(devices, key=lambda x: x['id'])
                         self.global_scrcpy_params = config_data.get('global_scrcpy_params', '')  # 加载全局参数
             else:
                 self.devices = []

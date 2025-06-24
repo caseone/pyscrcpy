@@ -46,7 +46,8 @@ python main.py
 ## 打包指南
 ```bash
 # 安装pyinstaller
-pip install pyinstaller
+#pip install pyinstaller
+uv pip install -r requirements.txt
 
 # 执行打包
 python -m PyInstaller --name pyscrcpy  --onefile  --noconsole --icon=pyscrcpy.jpg --noupx --clean main.py
