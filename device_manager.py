@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import os
 from PyQt5.QtWidgets import QMessageBox
@@ -8,6 +9,8 @@ class DeviceManager:
         self.config_path = 'pyscrcpy.json'
         self.devices = []
         self.global_scrcpy_params = ''
+        self.default_push_path = '/sdcard/Download/'
+        self.last_local_dir = ''
         self.load_devices()
     
     def add_device(self, device):
@@ -52,6 +55,8 @@ class DeviceManager:
                         devices = config_data.get('devices', [])
                         self.devices = sorted(devices, key=lambda x: x['id'])
                         self.global_scrcpy_params = config_data.get('global_scrcpy_params', '')  # 加载全局参数
+                        self.default_push_path = config_data.get('default_push_path', '/sdcard/Download/')
+                        self.last_local_dir = config_data.get('last_local_dir', '')
             else:
                 self.devices = []
         except json.JSONDecodeError:
@@ -63,7 +68,9 @@ class DeviceManager:
         try:
             config_data = {
                 'devices': self.devices,
-                'global_scrcpy_params': self.global_scrcpy_params  # 保存全局参数
+                'global_scrcpy_params': self.global_scrcpy_params,
+                'default_push_path': self.default_push_path,
+                'last_local_dir': self.last_local_dir  # 保存全局参数
             }
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(config_data, f, ensure_ascii=False, indent=2)
