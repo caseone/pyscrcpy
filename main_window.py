@@ -58,21 +58,39 @@ class MainWindow(QMainWindow):
         self.list_widget.setContextMenuPolicy(3)
         self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
 
-        btn_add = QPushButton('添加设备', self)
         btn_remove = QPushButton('删除设备', self)
         btn_connect = QPushButton('连接设备', self)
         btn_disconnect = QPushButton('断开设备', self)
-        btn_config = QPushButton('查看配置', self)
-        btn_setting = QPushButton('全局设置', self)
+        btn_copy_id = QPushButton('复制 ID', self)
+        btn_shell = QPushButton('ADB Shell', self)
+        btn_upload = QPushButton('上传文件', self)
+        btn_modify = QPushButton('修改别名', self)
         btn_scrcpy = QPushButton('启动 Scrcpy', self)
         btn_scrcpy.clicked.connect(self.launch_scrcpy)
 
-        btn_add.clicked.connect(self.add_device)
         btn_remove.clicked.connect(self.remove_device)
         btn_connect.clicked.connect(self.connect_device)
         btn_disconnect.clicked.connect(self.disconnect_device)
-        btn_config.clicked.connect(self.show_config)
-        btn_setting.clicked.connect(self.show_settings)
+        btn_copy_id.clicked.connect(self.copy_device_id)
+        btn_shell.clicked.connect(self.open_adb_shell)
+        btn_upload.clicked.connect(self.upload_file)
+        btn_modify.clicked.connect(self.modify_alias)
+
+        # 创建菜单栏
+        menubar = self.menuBar()
+        device_menu = menubar.addMenu('设备')
+        add_action = QAction('添加设备', self)
+        add_action.triggered.connect(self.add_device)
+        device_menu.addAction(add_action)
+
+        settings_menu = menubar.addMenu('设置')
+        config_action = QAction('查看配置', self)
+        config_action.triggered.connect(self.show_config)
+        setting_action = QAction('全局设置', self)
+        setting_action.triggered.connect(self.show_settings)
+
+        settings_menu.addAction(config_action)
+        settings_menu.addAction(setting_action)
 
         list_container = QWidget()
         list_layout = QVBoxLayout()
@@ -85,17 +103,18 @@ class MainWindow(QMainWindow):
 
         device_group = QGroupBox('设备')
         device_layout = QVBoxLayout()
-        device_layout.addWidget(btn_add)
         device_layout.addWidget(btn_remove)
         device_layout.addWidget(btn_connect)
         device_layout.addWidget(btn_disconnect)
         device_group.setLayout(device_layout)
 
-        config_group = QGroupBox('配置')
-        config_layout = QVBoxLayout()
-        config_layout.addWidget(btn_config)
-        config_layout.addWidget(btn_setting)
-        config_group.setLayout(config_layout)
+        action_group = QGroupBox('设备操作')
+        action_layout = QVBoxLayout()
+        action_layout.addWidget(btn_copy_id)
+        action_layout.addWidget(btn_shell)
+        action_layout.addWidget(btn_upload)
+        action_layout.addWidget(btn_modify)
+        action_group.setLayout(action_layout)
 
         scrcpy_group = QGroupBox('投屏')
         scrcpy_layout = QVBoxLayout()
@@ -103,7 +122,7 @@ class MainWindow(QMainWindow):
         scrcpy_group.setLayout(scrcpy_layout)
 
         action_layout.addWidget(device_group)
-        action_layout.addWidget(config_group)
+        action_layout.addWidget(action_group)
         action_layout.addWidget(scrcpy_group)
         action_layout.addStretch(1)
         action_container.setLayout(action_layout)
@@ -427,24 +446,30 @@ class MainWindow(QMainWindow):
         menu = QMenu()
         copy_action = QAction('复制设备 ID', menu)
         connect_action = QAction('连接设备', menu)
+        disconnect_action = QAction('断开设备', menu)
         scrcpy_action = QAction('启动 scrcpy', menu)
         upload_action = QAction('上传文件', menu)
         modify_action = QAction('修改别名', menu)
         adb_shell_action = QAction('ADB Shell', menu)
+        remove_action = QAction('删除设备', menu)
 
         copy_action.triggered.connect(self.copy_device_id)
         connect_action.triggered.connect(self.connect_device)
+        disconnect_action.triggered.connect(self.disconnect_device)
         scrcpy_action.triggered.connect(self.launch_scrcpy)
         upload_action.triggered.connect(self.upload_file)
         modify_action.triggered.connect(self.modify_alias)
         adb_shell_action.triggered.connect(self.open_adb_shell)
+        remove_action.triggered.connect(self.remove_device)
 
         menu.addAction(copy_action)
         menu.addAction(connect_action)
+        menu.addAction(disconnect_action)
         menu.addAction(scrcpy_action)
         menu.addAction(upload_action)
         menu.addAction(adb_shell_action)
         menu.addAction(modify_action)
+        menu.addAction(remove_action)
 
         menu.exec_(self.list_widget.viewport().mapToGlobal(pos))
 
@@ -454,9 +479,10 @@ class MainWindow(QMainWindow):
             device_id = self.device_manager.devices[selected]['id']
             try:
                 adb_shell_args = ['adb', '-s', device_id, 'shell']
+                adb_shell_cmd = subprocess.list2cmdline(adb_shell_args)
                 if shutil.which('wt'):
                     subprocess.Popen(
-                        ['wt'] + adb_shell_args,
+                        ['wt', '--title', adb_shell_cmd] + adb_shell_args,
                         stdin=subprocess.DEVNULL,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
