@@ -5,7 +5,15 @@
       "alias": "test",
       "status": "未连接",
       "last_connect": ""
+    },
+    {
+      "id": "9b1796c7",
+      "alias": "9b1796c7",
+      "status": "已连接",
+      "last_connect": ""
     }
   ],
-  "global_scrcpy_params": ""
+  "global_scrcpy_params": "",
+  "default_push_path": "/sdcard/Download/",
+  "last_local_dir": ""
 }

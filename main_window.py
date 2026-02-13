@@ -4,6 +4,7 @@ from device_manager import DeviceManager
 from PyQt5.QtCore import pyqtSlot, QProcess, QTimer, Qt
 import subprocess
 import os
+import shutil
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel, QLineEdit, QDialogButtonBox
 from PyQt5.QtWidgets import QHeaderView
 
@@ -70,7 +71,6 @@ class MainWindow(QMainWindow):
         btn_remove.clicked.connect(self.remove_device)
         btn_connect.clicked.connect(self.connect_device)
         btn_disconnect.clicked.connect(self.disconnect_device)
-        btn_upload.clicked.connect(self.upload_file)
         btn_config.clicked.connect(self.show_config)
         btn_setting.clicked.connect(self.show_settings)
 
@@ -89,7 +89,6 @@ class MainWindow(QMainWindow):
         device_layout.addWidget(btn_remove)
         device_layout.addWidget(btn_connect)
         device_layout.addWidget(btn_disconnect)
-        device_layout.addWidget(btn_upload)
         device_group.setLayout(device_layout)
 
         config_group = QGroupBox('配置')
@@ -416,6 +415,15 @@ class MainWindow(QMainWindow):
         QMessageBox.warning(self, '进程错误', f'scrcpy 运行异常: {error_msg}')
 
     def show_context_menu(self, pos):
+        # 获取点击位置的item
+        item = self.list_widget.itemAt(pos)
+        if not item:
+            return
+
+        # 选中被右键点击的行
+        row = item.row()
+        self.list_widget.setCurrentCell(row, 0)
+
         menu = QMenu()
         copy_action = QAction('复制设备 ID', menu)
         connect_action = QAction('连接设备', menu)
@@ -445,13 +453,23 @@ class MainWindow(QMainWindow):
         if selected >= 0:
             device_id = self.device_manager.devices[selected]['id']
             try:
-                subprocess.Popen(
-                    f'start cmd /k adb -s {device_id} shell',
-                    shell=True,
-                    stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+                adb_shell_args = ['adb', '-s', device_id, 'shell']
+                if shutil.which('wt'):
+                    subprocess.Popen(
+                        ['wt'] + adb_shell_args,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                else:
+                    adb_shell_cmd = subprocess.list2cmdline(adb_shell_args)
+                    subprocess.Popen(
+                        f'start "" cmd /k {adb_shell_cmd}',
+                        shell=True,
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
             except Exception as e:
                 error_msg = f'错误详情: {str(e)}'
                 details = (
